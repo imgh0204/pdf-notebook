@@ -23,8 +23,9 @@
   --desk:#14171d; --surface:#1d2129; --ink:#e6e9ef; --muted:#9aa3b4; --line:#2f3541;
   --accent:#78a0ff; --accent-ink:#0c1220; --accent-soft:#232d44; --warn:#ff7a72;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35); color-scheme:dark}
+[hidden]{display:none!important}
 html,body{height:100%}
-body{background:var(--desk);color:var(--ink);font-family:var(--f-ui);font-size:14px;overflow:hidden}
+body{margin:0;background:var(--desk);color:var(--ink);font-family:var(--f-ui);font-size:14px;overflow:hidden}
 .app{height:100%;display:flex;flex-direction:column}
 .bar{background:var(--surface);border-bottom:1px solid var(--line);
   padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
@@ -472,11 +473,19 @@ async function loadFile(f){
   pagesEl.innerHTML='<div class="loading">문서를 불러오는 중…</div>';
   await openPdf(await f.arrayBuffer(),f.name,false);
 }
-let dragN=0;const drop=$('#drop');
-addEventListener('dragenter',e=>{if([...e.dataTransfer.types].includes('Files')){dragN++;drop.hidden=false;}});
-addEventListener('dragleave',()=>{dragN=Math.max(0,dragN-1);if(!dragN)drop.hidden=true;});
-addEventListener('dragover',e=>e.preventDefault());
-addEventListener('drop',e=>{e.preventDefault();dragN=0;drop.hidden=true;const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+const drop=$('#drop');let dropT=null;
+const hasFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
+function hideDrop(){clearTimeout(dropT);dropT=null;drop.hidden=true;}
+/* The overlay stays only while files are actively dragged over the page:
+   every dragover re-arms a short timer, so it always clears on drop, cancel or leaving the window. */
+document.addEventListener('dragover',e=>{if(!hasFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy';
+  drop.hidden=false;clearTimeout(dropT);dropT=setTimeout(hideDrop,180);},true);
+document.addEventListener('dragleave',e=>{if(!e.relatedTarget||e.clientX<=0||e.clientY<=0||e.clientX>=innerWidth||e.clientY>=innerHeight)hideDrop();},true);
+document.addEventListener('dragend',hideDrop,true);
+document.addEventListener('drop',e=>{e.preventDefault();hideDrop();
+  const dt=e.dataTransfer;let f=dt&&dt.files&&dt.files[0];
+  if(!f&&dt&&dt.items)for(const it of dt.items){if(it.kind==='file'){f=it.getAsFile();break;}}
+  if(f)loadFile(f);},true);
 
 /* ---------- buttons & keys ---------- */
 $('#undoBtn').onclick=undo;$('#redoBtn').onclick=redo;
@@ -504,7 +513,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='-'||e.key==='_'){setScale(S.scale/1.15);return;}
   if(e.key==='0'){fitWidth();return;}
   if(e.key==='?'){toggleHelp();return;}
-  if(e.key==='Escape'){toggleHelp(false);}
+  if(e.key==='Escape'){toggleHelp(false);hideDrop();}
 });
 document.addEventListener('keyup',e=>{if(e.code==='Space'&&S.prevTool){setTool(S.prevTool);S.prevTool=null;}});
 
