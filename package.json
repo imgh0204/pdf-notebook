@@ -1,0 +1,51 @@
+{
+  "name": "pdf-notebook",
+  "version": "1.0.1",
+  "private": true,
+  "description": "PDF 필기장",
+  "author": "PDF 필기장",
+  "main": "src/main.js",
+  "scripts": {
+    "vendor": "node scripts/vendor.js",
+    "start": "npm run vendor && electron .",
+    "dist": "npm run vendor && electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans-kr": "5.3.0",
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "3.11.174"
+  },
+  "build": {
+    "appId": "com.pdfnotebook.app",
+    "productName": "PDF 필기장",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    },
+    "fileAssociations": [
+      {
+        "ext": "pdf",
+        "name": "PDFNotebook.Document",
+        "description": "PDF 문서",
+        "role": "Editor"
+      }
+    ]
+  }
+}

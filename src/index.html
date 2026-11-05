@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PDF 필기장</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:">
+<link rel="stylesheet" href="vendor/fonts.css">
 <style>
 /* Layout: a fixed tool rail on top, a desk below where pages stack like printed handouts. */
 :root{
@@ -23,6 +23,7 @@
   --desk:#14171d; --surface:#1d2129; --ink:#e6e9ef; --muted:#9aa3b4; --line:#2f3541;
   --accent:#78a0ff; --accent-ink:#0c1220; --accent-soft:#232d44; --warn:#ff7a72;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35); color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
 body{margin:0;background:var(--desk);color:var(--ink);font-family:var(--f-ui);font-size:14px;overflow:hidden}
@@ -50,6 +51,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .wd{width:28px;height:30px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center}
 .wd span{display:block;border-radius:50%;background:var(--ink)}
 .wd[aria-pressed="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+#textSize{width:44px;height:30px;padding:0;text-align:center;font:inherit;font-family:var(--f-key);font-size:12px;color:var(--ink);background:none;
+  border:1px solid var(--line);border-radius:6px;appearance:textfield}
+#textSize::-webkit-inner-spin-button,#textSize::-webkit-outer-spin-button{appearance:none;margin:0}
+#textSize:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .zoom{font-family:var(--f-key);font-size:12px;min-width:46px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
 .pg{font-family:var(--f-key);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .spacer{flex:1}
@@ -96,17 +101,22 @@ kbd{font-family:var(--f-key);font-size:11px;padding:1px 6px;border:1px solid var
     <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
     <span class="sep"></span>
     <div class="grp" role="toolbar" aria-label="도구" id="tools">
-      <button class="tb" data-tool="hand" title="이동 (V, Space 누른 채 드래그)"><svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5v-7a1.5 1.5 0 0 1 3 0V12M14 10.5a1.5 1.5 0 0 1 3 0V12M17 11.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.4-2L8 15"/></svg><span class="k">V</span></button>
-      <button class="tb" data-tool="pen" title="펜 (P) · Shift: 직선"><svg viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg><span class="k">P</span></button>
-      <button class="tb" data-tool="hl" title="형광펜 (H) · Shift: 직선"><svg viewBox="0 0 24 24"><path d="M9 14l-3 3v3h3l3-3"/><path d="M9 14l7-9 4 4-9 7z"/><path d="M4 21h8"/></svg><span class="k">H</span></button>
+      <button class="tb" data-tool="hand" title="이동 (Q, Space 누른 채 드래그)"><svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5v-7a1.5 1.5 0 0 1 3 0V12M14 10.5a1.5 1.5 0 0 1 3 0V12M17 11.5a1.5 1.5 0 0 1 3 0V16a6 6 0 0 1-6 6h-2a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.4-2L8 15"/></svg><span class="k">Q</span></button>
+      <button class="tb" data-tool="pen" title="펜 (W) · Shift: 직선"><svg viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg><span class="k">W</span></button>
+      <button class="tb" data-tool="hl" title="형광펜 (E) · Shift: 직선"><svg viewBox="0 0 24 24"><path d="M9 14l-3 3v3h3l3-3"/><path d="M9 14l7-9 4 4-9 7z"/><path d="M4 21h8"/></svg><span class="k">E</span></button>
       <button class="tb" data-tool="rect" title="사각형 (R)"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1"/></svg><span class="k">R</span></button>
       <button class="tb" data-tool="arrow" title="화살표 (A)"><svg viewBox="0 0 24 24"><path d="M5 19L19 5M10 5h9v9"/></svg><span class="k">A</span></button>
-      <button class="tb" data-tool="text" title="텍스트 (T)"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="k">T</span></button>
-      <button class="tb" data-tool="eraser" title="지우개 (E) · 지나간 필기를 지움"><svg viewBox="0 0 24 24"><path d="M8 20h12M4.5 14.5l9-9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 18H8z"/><path d="M9 10l5 5"/></svg><span class="k">E</span></button>
+      <button class="tb" data-tool="text" title="텍스트 (S) · 글자를 드래그하면 이동, 클릭하면 수정"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="k">S</span></button>
+      <button class="tb" data-tool="eraser" title="지우개 (D) · 지나간 필기를 지움"><svg viewBox="0 0 24 24"><path d="M8 20h12M4.5 14.5l9-9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 18H8z"/><path d="M9 10l5 5"/></svg><span class="k">D</span></button>
     </div>
     <span class="sep"></span>
     <div class="grp" id="swatches" aria-label="색상"></div>
     <div class="grp" id="widths" aria-label="굵기"></div>
+    <div class="grp" id="textSizeGrp" aria-label="글자 크기" hidden>
+      <button class="tb" id="textSizeDown" title="글자 크기 줄이기 ([)"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+      <input id="textSize" type="number" min="6" max="120" step="1" aria-label="글자 크기" title="글자 크기 (6–120)">
+      <button class="tb" id="textSizeUp" title="글자 크기 키우기 (])"><svg viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></svg></button>
+    </div>
     <span class="sep"></span>
     <div class="grp">
       <button class="tb" id="undoBtn" title="실행 취소 (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
@@ -124,12 +134,13 @@ kbd{font-family:var(--f-key);font-size:11px;padding:1px 6px;border:1px solid var
     <div class="help" id="help" hidden>
       <h2>단축키</h2>
       <dl>
-        <dt><kbd>P</kbd> <kbd>H</kbd></dt><dd>펜 · 형광펜 (<kbd>Shift</kbd> 누르면 직선)</dd>
-        <dt><kbd>R</kbd> <kbd>A</kbd> <kbd>T</kbd></dt><dd>사각형 · 화살표 · 텍스트</dd>
-        <dt><kbd>E</kbd></dt><dd>지우개 (필기 위를 클릭하거나 드래그)</dd>
-        <dt><kbd>V</kbd> / <kbd>Space</kbd></dt><dd>이동 (Space는 누르는 동안만)</dd>
+        <dt><kbd>Q</kbd> / <kbd>Space</kbd></dt><dd>이동 (Space는 누르는 동안만)</dd>
+        <dt><kbd>W</kbd> <kbd>E</kbd></dt><dd>펜 · 형광펜 (<kbd>Shift</kbd> 누르면 직선)</dd>
+        <dt><kbd>R</kbd> <kbd>A</kbd></dt><dd>사각형 · 화살표</dd>
+        <dt><kbd>S</kbd></dt><dd>텍스트 (글자를 드래그하면 이동, 클릭하면 수정)</dd>
+        <dt><kbd>D</kbd></dt><dd>지우개 (필기 위를 클릭하거나 드래그)</dd>
         <dt><kbd>1</kbd>–<kbd>5</kbd></dt><dd>색상 선택</dd>
-        <dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>굵기 · 글자 크기 줄이기 / 키우기</dd>
+        <dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>굵기 줄이기 / 키우기 · 글자 크기 1씩 조절</dd>
         <dt><kbd>Ctrl</kbd>+<kbd>Z</kbd></dt><dd>실행 취소</dd>
         <dt><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></dt><dd>다시 실행 (<kbd>Ctrl</kbd>+<kbd>Y</kbd>도 가능)</dd>
         <dt><kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd></dt><dd>확대 · 축소 · 폭에 맞추기 (<kbd>Ctrl</kbd>+휠도 가능)</dd>
@@ -147,25 +158,20 @@ kbd{font-family:var(--f-key);font-size:11px;padding:1px 6px;border:1px solid var
 <div class="drop" id="drop" hidden>여기에 PDF를 놓으세요</div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/pdf.worker.min.js"></script>
+<script src="vendor/pdf-lib.min.js"></script>
 <script>
 (function(){
-const WORKER_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-if(window.pdfjsWorker){/* local build: worker code is bundled in the page */}
-else try{
-  const blob=new Blob(['importScripts("'+WORKER_URL+'");'],{type:'application/javascript'});
-  pdfjsLib.GlobalWorkerOptions.workerPort=new Worker(URL.createObjectURL(blob));
-}catch(e){ pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER_URL; }
-
 const $=s=>document.querySelector(s);
 const viewer=$('#viewer'), pagesEl=$('#pages');
 const COLORS=['#1d1d1f','#d7263d','#1f56c9','#1e8a4c','#f2c200'];
 const COLOR_NAMES=['검정','빨강','파랑','초록','노랑'];
-const WIDTHS={pen:[1.2,2.2,4],hl:[9,14,22],rect:[1.2,2.2,4],arrow:[1.2,2.2,4],text:[12,16,22]};
+const WIDTHS={pen:[1.2,2.2,4],hl:[9,14,22],rect:[1.2,2.2,4],arrow:[1.2,2.2,4]};
+const TEXT_MIN=6,TEXT_MAX=120;
 const FONT='"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
 const S={pdf:null,bytes:null,name:'',pages:[],scale:1,tool:'pen',prevTool:null,
-  color:{ink:0,hl:4},wl:{pen:1,hl:1,rect:1,arrow:1,text:1},undo:[],redo:[],sample:false,editor:null,loadId:0};
+  color:{ink:0,hl:4},wl:{pen:1,hl:1,rect:1,arrow:1},textSize:16,undo:[],redo:[],sample:false,editor:null,loadId:0};
 const dpr=()=>Math.min(window.devicePixelRatio||1,2);
 const group=t=>t==='hl'?'hl':'ink';
 
@@ -173,6 +179,7 @@ const group=t=>t==='hl'?'hl':'ink';
 const sw=$('#swatches');
 COLORS.forEach((c,i)=>{const b=document.createElement('button');b.className='sw';b.id='sw'+i;b.style.background=c;
   b.title=COLOR_NAMES[i]+' ('+(i+1)+')';b.setAttribute('aria-label',COLOR_NAMES[i]);b.onclick=()=>setColor(i);sw.appendChild(b);});
+const sizeInput=$('#textSize');
 const wd=$('#widths');
 [0,1,2].forEach(i=>{const b=document.createElement('button');b.className='wd';b.id='wd'+i;
   b.innerHTML='<span style="width:'+(4+i*4)+'px;height:'+(4+i*4)+'px"></span>';b.title='굵기 '+(i+1)+' ([ ])';b.onclick=()=>setWidth(i);wd.appendChild(b);});
@@ -182,8 +189,9 @@ function syncUI(){
   const g=group(S.tool);
   COLORS.forEach((_,i)=>$('#sw'+i).setAttribute('aria-pressed',S.color[g]===i));
   const wk=WIDTHS[S.tool]?S.tool:null;
-  [0,1,2].forEach(i=>{const b=$('#wd'+i);b.disabled=!wk;b.style.opacity=wk?1:.35;b.setAttribute('aria-pressed',wk&&S.wl[wk]===i);
-    b.title=S.tool==='text'?'글자 크기 '+(i+1)+' ([ ])':'굵기 '+(i+1)+' ([ ])';});
+  [0,1,2].forEach(i=>{const b=$('#wd'+i);b.disabled=!wk;b.style.opacity=wk?1:.35;b.setAttribute('aria-pressed',wk&&S.wl[wk]===i);});
+  wd.hidden=S.tool==='text';$('#textSizeGrp').hidden=S.tool!=='text';
+  sizeInput.value=S.textSize;
   $('#undoBtn').disabled=!S.undo.length;$('#redoBtn').disabled=!S.redo.length;
   $('#zoomLbl').textContent=Math.round(S.scale*100)+'%';
   viewer.className='viewer tool-'+S.tool+(S.tool==='hand'?' hand':'');
@@ -193,7 +201,15 @@ function setColor(i){const g=group(S.tool==='hand'||S.tool==='eraser'?'pen':S.to
   if(S.tool==='hand'||S.tool==='eraser')S.tool='pen';
   if(S.editor){S.editor.ta.style.color=COLORS[i];}
   syncUI();}
-function setWidth(i){if(WIDTHS[S.tool]){S.wl[S.tool]=i;if(S.editor&&S.tool==='text')sizeEditor();syncUI();}}
+function setWidth(i){if(WIDTHS[S.tool]){S.wl[S.tool]=i;syncUI();}}
+function setTextSize(n){if(Number.isFinite(n))S.textSize=Math.max(TEXT_MIN,Math.min(TEXT_MAX,Math.round(n)));if(S.editor)sizeEditor();syncUI();}
+/* Keep the text being edited open while its size changes. */
+[['#textSizeDown',-1],['#textSizeUp',1]].forEach(([id,step])=>{const b=$(id);
+  b.addEventListener('mousedown',e=>e.preventDefault());b.onclick=()=>setTextSize(S.textSize+step);});
+sizeInput.addEventListener('change',()=>setTextSize(parseFloat(sizeInput.value)));
+sizeInput.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!=='Escape')return;e.preventDefault();
+  setTextSize(e.key==='Enter'?parseFloat(sizeInput.value):S.textSize);
+  if(S.editor)S.editor.ta.focus();else sizeInput.blur();});
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600);}
 
 /* ---------- loading ---------- */
@@ -203,11 +219,11 @@ async function openPdf(buf,name,sample){
   const u8=new Uint8Array(buf);
   const copy=u8.slice();
   let pdf;
-  try{pdf=await pdfjsLib.getDocument({data:u8}).promise;}
-  catch(e){toast(e&&e.name==='PasswordException'?'암호가 걸린 PDF는 열 수 없어요.':'PDF를 읽지 못했어요. 파일이 손상되지 않았는지 확인해 주세요.');return;}
+  try{pdf=await pdfjsLib.getDocument({data:u8,cMapUrl:'vendor/cmaps/',cMapPacked:true,standardFontDataUrl:'vendor/standard_fonts/'}).promise;}
+  catch(e){toast(e&&e.name==='PasswordException'?'암호가 걸린 PDF는 열 수 없어요.':'PDF를 읽지 못했어요. 파일이 손상되지 않았는지 확인해 주세요.');return false;}
   if(id!==S.loadId)return;
   if(S.pdf)S.pdf.destroy();
-  S.pdf=pdf;S.bytes=copy;S.name=name;S.sample=!!sample;S.undo=[];S.redo=[];
+  S.pdf=pdf;S.bytes=copy;S.name=name;S.sample=!!sample;S.undo=[];S.redo=[];S.dirty=false;
   $('#fname').textContent=name;$('#notice').hidden=!sample;
   pagesEl.innerHTML='';S.pages=[];
   for(let i=1;i<=pdf.numPages;i++){
@@ -221,6 +237,7 @@ async function openPdf(buf,name,sample){
   }
   fitWidth(true);
   updatePage();
+  return true;
 }
 const io=new IntersectionObserver(es=>es.forEach(e=>{const P=S.pages[+e.target.dataset.i];if(P)P.visible=e.isIntersecting;if(e.isIntersecting)renderPage(P);}),{root:viewer,rootMargin:'800px 0px'});
 function layout(){
@@ -316,16 +333,16 @@ function hit(a,x,y,r){
 }
 
 /* ---------- history ---------- */
-function doOp(op,inverse){
+function doOp(op,inverse=false){
   const P=S.pages[op.pi];const add=(op.op==='add')!==inverse;
   if(add)P.annots.splice(Math.min(op.idx,P.annots.length),0,op.a);
   else{const j=P.annots.indexOf(op.a);if(j>=0)P.annots.splice(j,1);}
 }
-function push(group){if(!group.length)return;S.undo.push(group);if(S.undo.length>300)S.undo.shift();S.redo=[];syncUI();}
+function push(group){if(!group.length)return;S.undo.push(group);if(S.undo.length>300)S.undo.shift();S.redo=[];S.dirty=true;syncUI();}
 function addAnnot(P,a){const op={op:'add',pi:P.i,a,idx:P.annots.length};doOp(op);return op;}
 function delAnnot(P,a){const op={op:'del',pi:P.i,a,idx:P.annots.indexOf(a)};doOp(op);return op;}
-function undo(){commitEditor();const g=S.undo.pop();if(!g)return;for(let i=g.length-1;i>=0;i--)doOp(g[i],true);S.redo.push(g);redrawOps(g);syncUI();}
-function redo(){commitEditor();const g=S.redo.pop();if(!g)return;g.forEach(o=>doOp(o,false));S.undo.push(g);redrawOps(g);syncUI();}
+function undo(){commitEditor();const g=S.undo.pop();if(!g)return;for(let i=g.length-1;i>=0;i--)doOp(g[i],true);S.redo.push(g);S.dirty=true;redrawOps(g);syncUI();}
+function redo(){commitEditor();const g=S.redo.pop();if(!g)return;g.forEach(o=>doOp(o,false));S.undo.push(g);S.dirty=true;redrawOps(g);syncUI();}
 function redrawOps(g){[...new Set(g.map(o=>o.pi))].forEach(pi=>drawInk(S.pages[pi]));}
 
 /* ---------- pointer ---------- */
@@ -337,8 +354,10 @@ pagesEl.addEventListener('pointerdown',e=>{
   if(t==='text'){
     e.preventDefault();
     if(S.editor){commitEditor();return;}
-    const r=6/S.scale;const ex=[...P.annots].reverse().find(a=>a.t==='text'&&hit(a,p.x,p.y,r));
-    openEditor(P,ex?ex.x:p.x,ex?ex.y:p.y-WIDTHS.text[S.wl.text]*0.65,ex);return;
+    const ex=textAt(P,p);
+    /* On existing text, wait for pointerup: a drag moves it, a plain click edits it. */
+    if(ex){ink.setPointerCapture(e.pointerId);D={P,t:'textmove',a:ex,sx:p.x,sy:p.y,x:ex.x,y:ex.y,moved:false};return;}
+    openEditor(P,p.x,p.y-S.textSize*0.65);return;
   }
   commitEditor();
   ink.setPointerCapture(e.pointerId);e.preventDefault();
@@ -348,11 +367,20 @@ pagesEl.addEventListener('pointerdown',e=>{
   else if(t==='arrow')D={P,t,a:{t:'arrow',c,w,x1:p.x,y1:p.y,x2:p.x,y2:p.y}};
   else if(t==='eraser'){D={P,t,ops:[]};erase(P,p);}
 });
+function textAt(P,p){const r=6/S.scale;return[...P.annots].reverse().find(a=>a.t==='text'&&hit(a,p.x,p.y,r));}
 function erase(P,p){const r=5/S.scale;let ch=false;
   for(let j=P.annots.length-1;j>=0;j--){const a=P.annots[j];if(hit(a,p.x,p.y,r)){D.ops.push(delAnnot(P,a));ch=true;}}
   if(ch)drawInk(P);}
 pagesEl.addEventListener('pointermove',e=>{
-  if(!D)return;const P=D.P;
+  if(!D){const ink=e.target.closest('.ink');
+    if(ink)ink.style.cursor=S.tool==='text'&&!S.editor&&textAt(S.pages[+ink.parentNode.dataset.i],pt(S.pages[+ink.parentNode.dataset.i],e))?'move':'';
+    return;}
+  const P=D.P;
+  if(D.t==='textmove'){const p=pt(P,e);
+    if(!D.moved&&Math.hypot(p.x-D.sx,p.y-D.sy)<4/S.scale)return;
+    D.moved=true;D.a._editing=true;const b=textBox(D.a);
+    D.x=Math.max(0,Math.min(P.w-b.w,D.a.x+p.x-D.sx));D.y=Math.max(0,Math.min(P.h-b.h,D.a.y+p.y-D.sy));
+    drawInk(P,{...D.a,_editing:false,x:D.x,y:D.y});return;}
   const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];const list=evs.length?evs:[e];
   if(D.t==='eraser'){list.forEach(ev=>erase(P,pt(P,ev)));return;}
   const p=pt(P,e);const a=D.a;
@@ -367,6 +395,11 @@ pagesEl.addEventListener('pointermove',e=>{
 function endDraw(){
   if(!D)return;const d=D;D=null;
   if(d.t==='eraser'){push(d.ops);return;}
+  if(d.t==='textmove'){
+    if(!d.moved){openEditor(d.P,d.a.x,d.a.y,d.a);return;}
+    delete d.a._editing;
+    push([delAnnot(d.P,d.a),addAnnot(d.P,{...d.a,x:d.x,y:d.y})]);drawInk(d.P);return;
+  }
   const a=d.a;let ok=true;
   if(a.t==='rect')ok=a.rw>2&&a.rh>2;
   if(a.t==='arrow')ok=Math.hypot(a.x2-a.x1,a.y2-a.y1)>4;
@@ -387,31 +420,30 @@ viewer.addEventListener('pointerup',endPan);viewer.addEventListener('pointercanc
 /* ---------- text editor ---------- */
 function openEditor(P,x,y,existing){
   const ta=document.createElement('textarea');ta.className='editor';ta.id='textEditor';ta.spellcheck=false;
-  const s=existing?existing.s:WIDTHS.text[S.wl.text];
   const c=existing?existing.c:COLORS[S.color.ink];
   if(existing){existing._editing=true;drawInk(P);ta.value=existing.txt;
-    S.wl.text=Math.max(0,WIDTHS.text.indexOf(existing.s));const ci=COLORS.indexOf(existing.c);if(ci>=0)S.color.ink=ci;syncUI();}
+    S.textSize=existing.s;const ci=COLORS.indexOf(existing.c);if(ci>=0)S.color.ink=ci;syncUI();}
   ta.style.color=c;
   S.editor={P,x,y,ta,existing};P.el.appendChild(ta);sizeEditor();
   ta.addEventListener('input',sizeEditor);
   ta.addEventListener('keydown',ev=>{ev.stopPropagation();
     if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();commitEditor();}
     else if(ev.key==='Escape'){ev.preventDefault();cancelEditor();}});
-  ta.addEventListener('blur',()=>setTimeout(()=>{if(S.editor&&S.editor.ta===ta)commitEditor();},0));
+  ta.addEventListener('blur',ev=>{if(ev.relatedTarget&&ev.relatedTarget.id==='textSize')return;
+    setTimeout(()=>{if(S.editor&&S.editor.ta===ta)commitEditor();},0);});
   setTimeout(()=>ta.focus(),0);
 }
-function editorSize(){return S.editor.existing&&S.editor.keepSize?S.editor.existing.s:WIDTHS.text[S.wl.text];}
-function sizeEditor(){const E=S.editor;if(!E)return;const s=WIDTHS.text[S.wl.text];
+function sizeEditor(){const E=S.editor;if(!E)return;const s=S.textSize;
   const ta=E.ta;ta.style.fontSize=(s*S.scale)+'px';placeEditor();
   const lines=ta.value.split('\n');mctx.font=(s*S.scale)+'px '+FONT;
   ta.style.width=(Math.max(...lines.map(l=>mctx.measureText(l).width))+s*S.scale)+'px';
   ta.style.height=(lines.length*s*S.scale*1.3+4)+'px';}
 function placeEditor(){const E=S.editor;if(!E)return;E.ta.style.left=(E.x*S.scale-1)+'px';E.ta.style.top=(E.y*S.scale-1)+'px';
-  const s=WIDTHS.text[S.wl.text];E.ta.style.fontSize=(s*S.scale)+'px';}
+  E.ta.style.fontSize=(S.textSize*S.scale)+'px';}
 function commitEditor(){
   const E=S.editor;if(!E)return;S.editor=null;
   const txt=E.ta.value.replace(/\s+$/,'');E.ta.remove();
-  const s=WIDTHS.text[S.wl.text],c=COLORS[S.color.ink];const ops=[];
+  const s=S.textSize,c=COLORS[S.color.ink];const ops=[];
   if(E.existing){delete E.existing._editing;
     const same=E.existing.txt===txt&&E.existing.s===s&&E.existing.c===c;
     if(!same){ops.push(delAnnot(E.P,E.existing));if(txt)ops.push(addAnnot(E.P,{t:'text',x:E.x,y:E.y,txt,s,c}));}
@@ -421,18 +453,16 @@ function commitEditor(){
 function cancelEditor(){const E=S.editor;if(!E)return;S.editor=null;E.ta.remove();if(E.existing)delete E.existing._editing;drawInk(E.P);}
 
 /* ---------- export ---------- */
-let downloadsP=null;
-const localSaver={save:async({filename,data})=>{const u=URL.createObjectURL(data);const a=document.createElement('a');a.href=u;a.download=filename;
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return{status:'saved'};}};
-function getDownloads(){if(!downloadsP)downloadsP=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(localSaver);return downloadsP;}
-getDownloads();
+async function writeToDisk(filename,bytes){
+  const r=await window.desktop.savePdf(filename,bytes);
+  if(r.status==='canceled')throw Object.assign(new Error('canceled'),{code:'declined'});
+  if(r.status==='failed')throw Object.assign(new Error(r.message),{code:'write_failed'});
+}
 async function savePdf(){
   commitEditor();
   if(!S.bytes)return;
   const btn=$('#saveBtn');btn.disabled=true;const old=btn.textContent;btn.textContent='저장 준비 중…';
   try{
-    const dl=await getDownloads();
-    if(!dl){toast('이 화면에서는 파일 저장을 쓸 수 없어요. claude.ai에서 이 페이지를 열어 주세요.');return;}
     const doc=await PDFLib.PDFDocument.load(S.bytes,{ignoreEncryption:true});
     const pgs=doc.getPages();
     for(const P of S.pages){
@@ -452,13 +482,13 @@ async function savePdf(){
     }
     const out=await doc.save();
     const base=S.name.replace(/\.pdf$/i,'')||'문서';
-    await dl.save({filename:base+'_필기.pdf',data:new Blob([out],{type:'application/pdf'})});
+    await writeToDisk(base+'_필기.pdf',out);
+    S.dirty=false;
     toast('저장했어요.');
   }catch(e){
     const code=e&&e.code;
     if(code==='declined')toast('저장을 취소했어요.');
-    else if(code==='rate_limited')toast('저장 창이 이미 열려 있어요. 잠시 후 다시 시도해 주세요.');
-    else if(code)toast('이 화면에서는 파일 저장을 쓸 수 없어요.');
+    else if(code==='write_failed')toast('파일을 저장하지 못했어요. 다른 프로그램에서 열려 있지 않은지 확인해 주세요.');
     else toast('PDF를 만들지 못했어요. 보호된 PDF는 필기를 넣어 저장할 수 없을 수 있어요.');
   }finally{btn.disabled=false;btn.textContent=old;}
 }
@@ -468,10 +498,18 @@ const fi=$('#fileInput');
 const pick=()=>fi.click();
 $('#openBtn').onclick=pick;$('#noticeOpen').onclick=pick;
 fi.onchange=async()=>{const f=fi.files[0];fi.value='';if(f)loadFile(f);};
+let userLoad=false;
 async function loadFile(f){
   if(!/pdf/i.test(f.type)&&!/\.pdf$/i.test(f.name)){toast('PDF 파일만 열 수 있어요.');return;}
+  commitEditor();
+  if(S.dirty&&!await window.desktop.confirmDiscard())return;
+  userLoad=true;
   pagesEl.innerHTML='<div class="loading">문서를 불러오는 중…</div>';
-  await openPdf(await f.arrayBuffer(),f.name,false);
+  const opened=await openPdf(await f.arrayBuffer(),f.name,false);
+  if(opened===false){
+    if(S.pages.length)pagesEl.replaceChildren(...S.pages.map(P=>P.el));
+    else pagesEl.innerHTML='<div class="loading">PDF를 열어 시작하세요. 파일을 이 화면에 끌어다 놓아도 돼요.</div>';
+  }
 }
 const drop=$('#drop');let dropT=null;
 const hasFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
@@ -495,7 +533,8 @@ const help=$('#help'),helpBtn=$('#helpBtn');
 function toggleHelp(v){help.hidden=v===undefined?!help.hidden:!v;helpBtn.setAttribute('aria-expanded',!help.hidden);}
 helpBtn.onclick=e=>{e.stopPropagation();toggleHelp();};
 document.addEventListener('pointerdown',e=>{if(!help.hidden&&!help.contains(e.target)&&e.target!==helpBtn&&!helpBtn.contains(e.target))toggleHelp(false);});
-const KEYTOOLS={v:'hand',p:'pen',h:'hl',r:'rect',a:'arrow',t:'text',e:'eraser'};
+/* Physical keys, so the shortcuts also work while the keyboard is in Korean input mode. */
+const KEYTOOLS={KeyQ:'hand',KeyW:'pen',KeyE:'hl',KeyR:'rect',KeyA:'arrow',KeyS:'text',KeyD:'eraser'};
 document.addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('textarea,input'))return;
   const mod=e.ctrlKey||e.metaKey,k=e.key.toLowerCase();
@@ -505,10 +544,10 @@ document.addEventListener('keydown',e=>{
   if(mod&&k==='o'){e.preventDefault();pick();return;}
   if(mod||e.altKey)return;
   if(e.code==='Space'){e.preventDefault();if(!e.repeat&&S.tool!=='hand'&&!D){S.prevTool=S.tool;setTool('hand');}return;}
-  if(KEYTOOLS[k]){setTool(KEYTOOLS[k]);return;}
+  if(KEYTOOLS[e.code]){setTool(KEYTOOLS[e.code]);return;}
   if(/^[1-5]$/.test(e.key)){setColor(+e.key-1);return;}
-  if(e.key==='['){if(WIDTHS[S.tool])setWidth(Math.max(0,S.wl[S.tool]-1));return;}
-  if(e.key===']'){if(WIDTHS[S.tool])setWidth(Math.min(2,S.wl[S.tool]+1));return;}
+  if(e.key==='['){if(S.tool==='text')setTextSize(S.textSize-1);else if(WIDTHS[S.tool])setWidth(Math.max(0,S.wl[S.tool]-1));return;}
+  if(e.key===']'){if(S.tool==='text')setTextSize(S.textSize+1);else if(WIDTHS[S.tool])setWidth(Math.min(2,S.wl[S.tool]+1));return;}
   if(e.key==='+'||e.key==='='){setScale(S.scale*1.15);return;}
   if(e.key==='-'||e.key==='_'){setScale(S.scale/1.15);return;}
   if(e.key==='0'){fitWidth();return;}
@@ -563,7 +602,9 @@ async function makeSample(){
   for(const c of [p1,p2]){const b=await new Promise(r=>c.toBlob(r,'image/png'));const img=await doc.embedPng(await b.arrayBuffer());
     doc.addPage([W,H]).drawImage(img,{x:0,y:0,width:W,height:H});}
   const bytes=await doc.save();
+  if(userLoad)return;
   await openPdf(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'샘플 문서.pdf',true);
+  if(userLoad)return;
   const P=S.pages[0];if(!P)return;
   P.annots.push(
     {t:'stroke',hl:true,c:COLORS[4],w:14,p:[150,451,388,451]},
@@ -574,8 +615,12 @@ async function makeSample(){
   drawInk(P);
 }
 
+addEventListener('beforeunload',e=>{commitEditor();if(S.dirty){e.preventDefault();e.returnValue='';}});
 syncUI();
-makeSample().catch(()=>{pagesEl.innerHTML='<div class="loading">PDF를 열어 시작하세요. 파일을 이 화면에 끌어다 놓아도 돼요.</div>';});
+const openDelivered=({name,data})=>loadFile(new File([data],name,{type:'application/pdf'}));
+window.desktop.onOpenFile(openDelivered);
+window.desktop.getInitialFile().then(f=>f?openDelivered(f):makeSample())
+  .catch(()=>{pagesEl.innerHTML='<div class="loading">PDF를 열어 시작하세요. 파일을 이 화면에 끌어다 놓아도 돼요.</div>';});
 })();
 </script>
 
