@@ -1,6 +1,6 @@
 {
   "name": "pdf-notebook",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "private": true,
   "description": "PDF 필기장",
   "author": "PDF 필기장",
@@ -37,7 +37,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "perMachine": false
+      "perMachine": false,
+      "artifactName": "PDF-Notebook-Setup-${version}.${ext}"
     },
     "fileAssociations": [
       {
@@ -46,6 +47,10 @@
         "description": "PDF 문서",
         "role": "Editor"
       }
+    ],
+    "electronLanguages": [
+      "ko",
+      "en-US"
     ]
   }
 }
